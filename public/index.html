@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>CRYPT0LOCK_SIM // Demonstração Educacional</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root{
+  --bg: #060a08;
+  --panel: #0c1410;
+  --green: #39ff6a;
+  --green-dim: #1a7a3a;
+  --amber: #ffb000;
+  --red: #ff2a4d;
+  --grey: #5d7a68;
+  --white: #d9ffe6;
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+
+body{
+  background: var(--bg);
+  color: var(--green);
+  font-family: 'JetBrains Mono', monospace;
+  min-height:100vh;
+  overflow-x:hidden;
+  position:relative;
+}
+
+.sim-tag{
+  position:fixed;
+  top:10px; right:10px;
+  z-index:999;
+  font-family:'Share Tech Mono', monospace;
+  font-size:11px;
+  letter-spacing:2px;
+  color:var(--amber);
+  border:1px solid var(--amber);
+  padding:5px 10px;
+  background:rgba(10,10,10,0.8);
+  animation: blinkTag 2.5s infinite;
+}
+@keyframes blinkTag{ 0%,100%{opacity:1;} 50%{opacity:.45;} }
+
+#matrix{
+  position:fixed; top:0; left:0;
+  width:100%; height:100%;
+  z-index:0;
+  opacity:0.35;
+}
+
+.crt::before{
+  content:"";
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0,0,0,0) 0px,
+    rgba(0,0,0,0) 2px,
+    rgba(0,255,100,0.025) 3px,
+    rgba(0,0,0,0) 4px
+  );
+  pointer-events:none;
+  z-index:998;
+}
+.crt::after{
+  content:"";
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0) 60%, rgba(0,0,0,0.55) 100%);
+  pointer-events:none;
+  z-index:997;
+}
+
+.wrap{
+  position:relative;
+  z-index:10;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.terminal{
+  width:100%;
+  max-width:640px;
+  background: linear-gradient(180deg, rgba(10,20,14,0.92), rgba(4,8,6,0.96));
+  border:1px solid var(--green-dim);
+  box-shadow: 0 0 35px rgba(57,255,106,0.15), inset 0 0 60px rgba(0,0,0,0.6);
+  border-radius:4px;
+  overflow:hidden;
+}
+
+.title-bar{
+  background:#0a1410;
+  border-bottom:1px solid var(--green-dim);
+  padding:8px 14px;
+  font-family:'Share Tech Mono', monospace;
+  font-size:12px;
+  color:var(--grey);
+  display:flex;
+  justify-content:space-between;
+  letter-spacing:1px;
+}
+
+.screen{ padding:36px 30px 30px; min-height:420px; display:flex; flex-direction:column; }
+
+.logo{
+  font-family:'VT323', monospace;
+  font-size:42px;
+  letter-spacing:3px;
+  color:var(--green);
+  text-align:center;
+  text-shadow: 0 0 8px rgba(57,255,106,0.7);
+  margin-bottom:6px;
+}
+
+.subtitle{
+  text-align:center;
+  font-size:12px;
+  color:var(--grey);
+  letter-spacing:3px;
+  margin-bottom:26px;
+  font-family:'Share Tech Mono', monospace;
+}
+
+.boot-log{
+  font-size:12px;
+  color:var(--green-dim);
+  line-height:1.6;
+  margin-bottom:22px;
+  min-height:90px;
+  white-space:pre-wrap;
+}
+.boot-log .ok{ color: var(--green); }
+
+.field-label{
+  font-size:13px;
+  letter-spacing:1px;
+  color:var(--white);
+  margin-bottom:8px;
+}
+.field-row{ display:flex; gap:10px; margin-bottom:14px; }
+input[type=text]{
+  flex:1;
+  background:#020503;
+  border:1px solid var(--green-dim);
+  color:var(--green);
+  font-family:'JetBrains Mono', monospace;
+  font-size:15px;
+  padding:12px 14px;
+  outline:none;
+  letter-spacing:1px;
+}
+input[type=text]:focus{ border-color:var(--green); box-shadow:0 0 10px rgba(57,255,106,0.3); }
+
+button{
+  background:transparent;
+  border:1px solid var(--green);
+  color:var(--green);
+  font-family:'Share Tech Mono', monospace;
+  letter-spacing:2px;
+  font-size:13px;
+  padding:12px 18px;
+  cursor:pointer;
+  transition: all .15s;
+}
+button:hover{ background:var(--green); color:#04140a; box-shadow:0 0 18px rgba(57,255,106,0.6); }
+button:disabled{ opacity:0.5; cursor:not-allowed; }
+button.amber{ border-color:var(--amber); color:var(--amber); }
+button.amber:hover:not(:disabled){ background:var(--amber); color:#1a0f00; }
+
+.hint{ font-size:11px; color:var(--grey); margin-top:4px; }
+.msg{ font-size:13px; margin-top:14px; min-height:18px; }
+.msg.error{ color:var(--red); }
+.msg.ok{ color:var(--green); }
+.msg.info{ color:var(--amber); }
+
+.hidden{ display:none !important; }
+
+.status-pill{
+  display:inline-block;
+  font-size:11px;
+  letter-spacing:2px;
+  padding:4px 10px;
+  border:1px solid var(--red);
+  color:var(--red);
+  margin-bottom:18px;
+  animation: blinkTag 1.6s infinite;
+}
+
+.alert-box{
+  border:1px solid var(--red);
+  background:rgba(255,42,77,0.06);
+  padding:14px 16px;
+  font-size:13px;
+  color:#ff8fa0;
+  margin-bottom:20px;
+  line-height:1.5;
+}
+
+.info-box{
+  border:1px solid var(--amber);
+  background:rgba(255,176,0,0.06);
+  padding:14px 16px;
+  font-size:13px;
+  color:#ffc857;
+  margin-bottom:20px;
+  line-height:1.5;
+}
+
+.kv{ display:flex; justify-content:space-between; font-size:13px; padding:9px 0; border-bottom:1px dashed rgba(57,255,106,0.15); }
+.kv span:first-child{ color:var(--grey); }
+.kv span:last-child{ color:var(--white); word-break:break-all; text-align:right; max-width:60%; font-family: monospace; }
+
+.wallet-box{
+  background:#020503;
+  border:1px solid var(--green);
+  padding:14px;
+  margin: 16px 0;
+  word-break:break-all;
+  font-size:14px;
+  color:var(--green);
+  font-family: monospace;
+  min-height:50px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.unlock-banner{
+  font-family:'VT323'; font-size:24px; letter-spacing:2px; color:var(--green);
+  text-align:center; margin:12px 0 16px;
+  text-shadow: 0 0 16px rgba(57,255,106,0.6);
+}
+
+.key-box{
+  background:#020503; border:1px solid var(--green); padding:16px 12px;
+  text-align:center; font-size:18px; letter-spacing:2px; color:var(--green);
+  margin: 12px 0 18px; word-break:break-all; font-weight:bold;
+}
+
+.note{ font-size:10px; color:var(--grey); margin-top:auto; padding-top:16px; border-top:1px dashed var(--green-dim); }
+
+.spinner{
+  display:inline-block;
+  width:12px; height:12px;
+  border:2px solid var(--green-dim);
+  border-top-color:var(--green);
+  border-radius:50%;
+  animation: spin 0.6s linear infinite;
+  margin-right:6px;
+}
+@keyframes spin{ to { transform:rotate(360deg); } }
+</style>
+</head>
+<body class="crt">
+
+<canvas id="matrix"></canvas>
+<div class="sim-tag">SIMULAÇÃO</div>
+
+<div class="wrap">
+  <div class="terminal">
+    <div class="title-bar">
+      <span>cryptolock_sim.exe — demo://localhost</span>
+    </div>
+
+    <!-- TELA 1: DIGITAR ID -->
+    <div class="screen" id="screen-id">
+      <div class="logo">CRYPT0LOCK</div>
+      <div class="subtitle">SISTEMA DE RECUPERAÇÃO — MANUAL</div>
+
+      <div class="boot-log" id="bootLog"></div>
+
+      <div class="field-label">DIGITE O ID DA MÁQUINA:</div>
+      <div class="field-row">
+        <input type="text" id="idInput" placeholder="EX: VITIMA-001" autocomplete="off">
+        <button onclick="checkId()">ACESSAR</button>
+      </div>
+      <div class="msg" id="idMsg"></div>
+
+      <footer class="note">
+        Demonstração educacional. Nenhuma transação real.
+      </footer>
+    </div>
+
+    <!-- TELA 2: AGUARDANDO PAGAMENTO -->
+    <div class="screen hidden" id="screen-payment">
+      <div class="status-pill">● PAGAMENTO NECESSÁRIO</div>
+      
+      <div class="alert-box">
+        Os arquivos foram criptografados. Realize o pagamento para recuperá-los.
+      </div>
+
+      <div class="kv">
+        <span>ID:</span>
+        <span id="payId">—</span>
+      </div>
+
+      <div class="kv" style="border-bottom:none;">
+        <span>Envie para:</span>
+      </div>
+
+      <div class="wallet-box" id="walletBox">0xa1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6</div>
+
+      <button style="width:100%; margin-top:20px;" onclick="notifyPayment()">EU JÁ PAGUEI</button>
+      <div class="msg" id="paymentMsg"></div>
+
+      <div class="info-box" style="margin-top:20px;">
+        Quando clicar em "EU JÁ PAGUEI", o administrador será notificado. Ele confirmará o pagamento manualmente.
+      </div>
+
+      <footer class="note">
+        Sistema de confirmação manual. Aguarde a confirmação do admin.
+      </footer>
+    </div>
+
+    <!-- TELA 3: AGUARDANDO CONFIRMAÇÃO -->
+    <div class="screen hidden" id="screen-waiting">
+      <div class="status-pill" style="border-color:var(--amber); color:var(--amber);">● AGUARDANDO CONFIRMAÇÃO</div>
+      
+      <div style="text-align:center; margin:40px 0; font-family:'VT323'; font-size:20px;">
+        <div class="spinner"></div>
+        <div>Aguardando aprovação do admin...</div>
+      </div>
+
+      <div class="info-box">
+        O administrador foi notificado que você realizou o pagamento. Por favor, aguarde a confirmação.
+      </div>
+
+      <div class="msg" id="statusMsg" style="text-align:center; margin:20px 0;">Verificando...</div>
+
+      <button style="width:100%; margin-top:10px;" onclick="cancelPaymentRequest()">VOLTAR</button>
+
+      <footer class="note">
+        Verificando automaticamente a cada 5 segundos...
+      </footer>
+    </div>
+
+    <!-- TELA 4: CHAVE REVELADA -->
+    <div class="screen hidden" id="screen-key">
+      <div class="status-pill" style="border-color:var(--green); color:var(--green);">● ARQUIVOS DESBLOQUEADOS</div>
+      <div class="unlock-banner">PAGAMENTO CONFIRMADO</div>
+      
+      <div class="field-label" style="text-align:center; margin-bottom:14px;">
+        SUA CHAVE DE DESCRIPTOGRAFIA:
+      </div>
+      
+      <div class="key-box" id="keyOut">CARREGANDO...</div>
+      
+      <div class="hint" style="text-align:center; margin-bottom:18px;">
+        Guarde esta chave. Ela foi armazenada no banco de dados.
+      </div>
+      
+      <button style="width:100%;" onclick="resetDemo()">REINICIAR DEMONSTRAÇÃO</button>
+
+      <footer class="note">
+        Demonstração educacional sobre ransomware.<br>
+        Este é o mecanismo usado por ataques reais: ID → Pagamento → Liberação de Chave.
+      </footer>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API_BASE = "";
+let currentId = null;
+let currentChave = null;
+let checkInterval = null;
+let walletAddress = null;
+
+function showScreen(name){
+  ["screen-id","screen-payment","screen-waiting","screen-key"].forEach(s=>{
+    document.getElementById(s).classList.toggle("hidden", s !== name);
+  });
+}
+
+async function checkId(){
+  const raw = document.getElementById("idInput").value.trim().toUpperCase();
+  const msg = document.getElementById("idMsg");
+  
+  if(!raw){ 
+    msg.className="msg error"; 
+    msg.textContent="Digite um ID."; 
+    return; 
+  }
+
+  msg.className="msg ok";
+  msg.textContent = "Consultando banco de dados...";
+
+  try{
+    const resp = await fetch(`${API_BASE}/api/registros/${encodeURIComponent(raw)}`);
+    const data = await resp.json();
+
+    if(resp.status === 404 || !data.found){
+      msg.className="msg error";
+      msg.textContent = "ID NÃO ENCONTRADO.";
+      glitchPulse();
+      return;
+    }
+
+    currentId = raw;
+    msg.className="msg ok";
+    msg.textContent = "ID localizado...";
+
+    setTimeout(()=>{
+      if(data.status === "unlocked"){
+        currentChave = data.chave;
+        renderKeyScreen(raw);
+      } else {
+        checkIfNotified(raw);
+      }
+    }, 600);
+  }catch(e){
+    msg.className="msg error";
+    msg.textContent = "Erro ao conectar à API.";
+    console.error(e);
+  }
+}
+
+async function checkIfNotified(id){
+  try {
+    const resp = await fetch(`${API_BASE}/api/payment-check/${encodeURIComponent(id)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    
+    const data = await resp.json();
+
+    if(data.status === "pending" || data.status === "confirmed"){
+      showScreen("screen-waiting");
+      startCheckingStatus();
+    } else if(data.status === "denied"){
+      document.getElementById("payId").textContent = id;
+      document.getElementById("walletBox").textContent = "0xa1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6";
+      document.getElementById("paymentMsg").textContent = "Pagamento anterior foi negado. Tente novamente.";
+      document.getElementById("paymentMsg").className = "msg error";
+      showScreen("screen-payment");
+    } else {
+      document.getElementById("payId").textContent = id;
+      document.getElementById("walletBox").textContent = "0xa1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6";
+      showScreen("screen-payment");
+    }
+  }catch(e){
+    console.error("Erro ao verificar notificação:", e);
+    document.getElementById("payId").textContent = id;
+    document.getElementById("walletBox").textContent = "0xa1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6";
+    showScreen("screen-payment");
+  }
+}
+
+async function notifyPayment(){
+  const btn = event.target;
+  btn.disabled = true;
+  const msg = document.getElementById("paymentMsg");
+  
+  msg.className = "msg info";
+  msg.textContent = "Notificando admin...";
+
+  try{
+    const resp = await fetch(`${API_BASE}/api/payment-notified/${encodeURIComponent(currentId)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    
+    if(resp.ok){
+      msg.className = "msg ok";
+      msg.textContent = "✓ Admin foi notificado!";
+      setTimeout(() => {
+        showScreen("screen-waiting");
+        startCheckingStatus();
+      }, 800);
+    } else {
+      msg.className = "msg error";
+      msg.textContent = "Erro ao notificar.";
+      btn.disabled = false;
+    }
+  }catch(e){
+    msg.className = "msg error";
+    msg.textContent = "Erro de conexão.";
+    btn.disabled = false;
+    console.error(e);
+  }
+}
+
+function startCheckingStatus(){
+  checkStatus();
+  checkInterval = setInterval(() => {
+    checkStatus();
+  }, 5000);
+}
+
+async function checkStatus(){
+  try{
+    const resp = await fetch(`${API_BASE}/api/payment-check/${encodeURIComponent(currentId)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    
+    const data = await resp.json();
+    const msg = document.getElementById("statusMsg");
+
+    if(data.status === "confirmed"){
+      clearInterval(checkInterval);
+      msg.className = "msg ok";
+      msg.textContent = "✓ Pagamento confirmado!";
+      
+      const registroResp = await fetch(`${API_BASE}/api/registros/${encodeURIComponent(currentId)}`);
+      const registroData = await registroResp.json();
+      currentChave = registroData.chave;
+      
+      setTimeout(() => {
+        renderKeyScreen(currentId);
+      }, 1000);
+    } else if(data.status === "denied"){
+      clearInterval(checkInterval);
+      msg.className = "msg error";
+      msg.textContent = "✗ Pagamento foi negado. Clique em VOLTAR para tentar novamente.";
+    } else {
+      msg.className = "msg info";
+      msg.textContent = "Ainda aguardando confirmação...";
+    }
+  }catch(e){
+    console.error("Erro ao verificar status:", e);
+  }
+}
+
+function cancelPaymentRequest(){
+  clearInterval(checkInterval);
+  document.getElementById("paymentMsg").textContent = "";
+  document.getElementById("statusMsg").textContent = "Verificando...";
+  showScreen("screen-payment");
+}
+
+function renderKeyScreen(id){
+  showScreen("screen-key");
+  scrambleReveal(currentChave);
+}
+
+function scrambleReveal(finalText){
+  const el = document.getElementById("keyOut");
+  const chars = "!<>-_\\/[]{}—=+*^?#0123456789ABCDEF";
+  let frame = 0;
+  const totalFrames = 22;
+  const interval = setInterval(()=>{
+    frame++;
+    if(frame >= totalFrames){
+      clearInterval(interval);
+      el.textContent = finalText;
+      return;
+    }
+    let out = "";
+    for(let i=0;i<finalText.length;i++){
+      const revealAt = (i/finalText.length)*totalFrames;
+      out += frame > revealAt ? finalText[i] : chars[Math.floor(Math.random()*chars.length)];
+    }
+    el.textContent = out;
+  }, 35);
+}
+
+function resetDemo(){
+  clearInterval(checkInterval);
+  document.getElementById("idInput").value = "";
+  document.getElementById("idMsg").textContent = "";
+  document.getElementById("paymentMsg").textContent = "";
+  document.getElementById("statusMsg").textContent = "Verificando...";
+  currentId = null;
+  currentChave = null;
+  walletAddress = null;
+  showScreen("screen-id");
+}
+
+function glitchPulse(){
+  const t = document.querySelector(".terminal");
+  t.style.transform = "translate(1px,0)";
+  setTimeout(()=> t.style.transform = "translate(-1px,0)", 60);
+  setTimeout(()=> t.style.transform = "translate(0,0)", 120);
+}
+
+const bootLines = [
+  "[ OK ] inicializando interface...",
+  "[ OK ] conectando ao servidor...",
+  "[ OK ] carregando registros...",
+  "[ .. ] aguardando ID"
+];
+
+function typeBootLog(){
+  const el = document.getElementById("bootLog");
+  let li = 0, ci = 0;
+  function tick(){
+    if(li >= bootLines.length) return;
+    const line = bootLines[li];
+    el.innerHTML = bootLines.slice(0,li).map(l=>`<span class="ok">${l}</span>`).join("<br>") +
+      (li>0?"<br>":"") + line.slice(0,ci);
+    ci++;
+    if(ci > line.length){ li++; ci=0; setTimeout(tick, 250); }
+    else setTimeout(tick, 14);
+  }
+  tick();
+}
+
+typeBootLog();
+
+document.getElementById("idInput").addEventListener("keydown", e=>{
+  if(e.key === "Enter") checkId();
+});
+
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resize();
+window.addEventListener("resize", resize);
+const glyphs = "アイウエオカキクケコ0123456789ABCDEF$#%&";
+const fontSize = 14;
+let columns, drops;
+function setupColumns(){
+  columns = Math.floor(canvas.width / fontSize);
+  drops = Array(columns).fill(1);
+}
+setupColumns();
+window.addEventListener("resize", setupColumns);
+function drawMatrix(){
+  ctx.fillStyle = "rgba(2,8,5,0.08)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "#1fae54";
+  ctx.font = fontSize+"px monospace";
+  for(let i=0;i<drops.length;i++){
+    const text = glyphs[Math.floor(Math.random()*glyphs.length)];
+    ctx.fillText(text, i*fontSize, drops[i]*fontSize);
+    if(drops[i]*fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+    drops[i]++;
+  }
+}
+setInterval(drawMatrix, 55);
+</script>
+</body>
+</html>
