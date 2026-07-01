@@ -616,10 +616,10 @@ async function adminLogin(){
     const data = await resp.json();
 
     if(resp.ok && data.success){
-      localStorage.setItem("adminToken", adminToken);
+      adminToken = data.token;                     // ✅ salva o token retornado
       msg.className = "msg ok";
       msg.textContent = "✓ Login realizado!";
-      
+
       setTimeout(() => {
         showMainScreen();
         loadRegistros();
@@ -877,7 +877,6 @@ async function denyPayment(userId){
 }
 
 function logout(){
-  localStorage.removeItem("adminToken");
   document.getElementById("username").value = "";
   document.getElementById("password").value = "";
   document.getElementById("loginMsg").textContent = "";
@@ -887,14 +886,6 @@ function logout(){
 document.getElementById("password").addEventListener("keydown", e => {
   if(e.key === "Enter") adminLogin();
 });
-
-// Verificar se já está logado ao carregar a página
-if(localStorage.getItem("adminToken")){
-  adminToken = localStorage.getItem("adminToken");
-  showMainScreen();
-  loadRegistros();
-  loadPendingPayments();
-}
 </script>
 </body>
 </html>
